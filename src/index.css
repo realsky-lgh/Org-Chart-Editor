@@ -55,6 +55,8 @@ body {
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: relative;
+  z-index: 20;
 }
 .header-bar::-webkit-scrollbar {
   display: none;
@@ -70,6 +72,8 @@ body {
   border-right: 1px solid var(--border-color);
   padding: 16px;
   overflow-y: auto;
+  position: relative;
+  z-index: 10;
 }
 .canvas-container {
   background: var(--bg-main);
@@ -85,6 +89,8 @@ body {
   border-left: 1px solid var(--border-color);
   padding: 16px;
   overflow-y: auto;
+  position: relative;
+  z-index: 10;
 }
 
 /* Stencil Sidebar Styles */
