@@ -111,6 +111,23 @@ export default function App() {
     }
   };
 
+  const handleZoomIn = () => {
+    if (!graph) return;
+    const currentZoom = graph.zoom();
+    graph.zoom(currentZoom + 0.1);
+  };
+
+  const handleZoomOut = () => {
+    if (!graph) return;
+    const currentZoom = graph.zoom();
+    graph.zoom(Math.max(0.1, currentZoom - 0.1));
+  };
+
+  const handleZoomToFit = () => {
+    if (!graph) return;
+    graph.zoomToFit({ padding: 20, maxZoom: 1 });
+  };
+
   const handleAutoLayout = (direction) => {
     if (!graph) return;
 
@@ -291,7 +308,7 @@ export default function App() {
     instance.use(
       new Selection({
         enabled: true,
-        rubberband: false,
+        rubberband: true,
         showNodeSelectionBox: true,
         showEdgeSelectionBox: true,
       })
@@ -379,6 +396,17 @@ export default function App() {
 
     instance.on('cell:selected', updateSelection);
     instance.on('cell:unselected', updateSelection);
+
+    // Batch resizing: sync size of all selected nodes when one is resized
+    instance.on('node:resizing', ({ node }) => {
+      const selected = instance.getSelectedCells().filter(cell => cell.isNode() && cell.id !== node.id);
+      if (selected.length > 0) {
+        const size = node.getSize();
+        selected.forEach(n => {
+          n.setSize(size.width, size.height);
+        });
+      }
+    });
 
     // Double click to edit edge labels inline
     instance.on('edge:dblclick', ({ edge }) => {
@@ -538,6 +566,9 @@ export default function App() {
           onExportPDF={handleExportPDF}
           onClearCanvas={handleClearCanvas}
           onAutoLayout={handleAutoLayout}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onZoomToFit={handleZoomToFit}
         />
       </header>
       <div className="main-content">

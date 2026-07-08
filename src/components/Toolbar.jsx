@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Download, Upload, Image, FileText, Printer, Trash2, RefreshCw } from 'lucide-react';
+import { Download, Upload, Image, FileText, Printer, Trash2, RefreshCw, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 
 export default function Toolbar({
   onImportJSON,
@@ -9,6 +9,9 @@ export default function Toolbar({
   onExportPDF,
   onClearCanvas,
   onAutoLayout,
+  onZoomIn,
+  onZoomOut,
+  onZoomToFit,
 }) {
   const fileInputRef = useRef(null);
 
@@ -114,6 +117,35 @@ export default function Toolbar({
         >
           <RefreshCw size={16} />
           <span>整理 (横向)</span>
+        </button>
+      </div>
+
+      <div className="toolbar-divider" />
+
+      <div className="toolbar-group">
+        <button
+          className="btn-action"
+          onClick={onZoomIn}
+          title="放大视野"
+        >
+          <ZoomIn size={16} />
+          <span>放大</span>
+        </button>
+        <button
+          className="btn-action"
+          onClick={onZoomOut}
+          title="缩小视野"
+        >
+          <ZoomOut size={16} />
+          <span>缩小</span>
+        </button>
+        <button
+          className="btn-action"
+          onClick={onZoomToFit}
+          title="自适应画布大小"
+        >
+          <Maximize size={16} />
+          <span>自适应</span>
         </button>
       </div>
 
