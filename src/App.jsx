@@ -272,6 +272,10 @@ export default function App() {
     const instance = new Graph({
       container: containerRef.current,
       autoResize: true,
+      panning: {
+        enabled: true,
+        eventTypes: ['rightMouseDown'],
+      },
       grid: {
         size: 10,
         visible: true,
@@ -559,12 +563,20 @@ export default function App() {
     window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
 
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+    containerRef.current.addEventListener('contextmenu', handleContextMenu);
+
     // Clean up on unmount
     return () => {
       if (saveTimeout) clearTimeout(saveTimeout);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('beforeprint', handleBeforePrint);
       window.removeEventListener('afterprint', handleAfterPrint);
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('contextmenu', handleContextMenu);
+      }
       instance.dispose();
     };
   }, []);
