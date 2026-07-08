@@ -78,7 +78,7 @@ export default function App() {
 
   const handleSaveVersion = (name) => {
     if (!graph) return;
-    const finalName = name || window.prompt('请输入本次保存的版本名称:', '版本_' + new Date().toLocaleString());
+    const finalName = name || window.prompt('请输入本次保存的架构图名称:', '架构图_' + new Date().toLocaleString());
     if (!finalName) return;
 
     const newVersion = {

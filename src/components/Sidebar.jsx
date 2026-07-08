@@ -122,7 +122,7 @@ export default function Sidebar({
         }}
       >
         <Save size={15} style={{ color: 'var(--accent-blue, #2563eb)' }} />
-        <span>保存当前版本</span>
+        <span>保存当前架构图</span>
       </button>
 
       <div 
