@@ -3,6 +3,7 @@ import { Graph } from '@antv/x6';
 import { register } from '@antv/x6-react-shape';
 import { Export } from '@antv/x6-plugin-export';
 import { Selection } from '@antv/x6-plugin-selection';
+import { Transform } from '@antv/x6-plugin-transform';
 import { DagreLayout } from '@antv/layout';
 import { DeptNode, PosNode, PersonNode } from './components/NodeTemplates';
 import './index.css';
@@ -220,7 +221,7 @@ export default function App() {
       }
     });
 
-    // Enable export plugin
+    // Enable export, selection, and transform (resizing) plugins
     instance.use(new Export());
     instance.use(
       new Selection({
@@ -228,6 +229,17 @@ export default function App() {
         rubberband: false,
         showNodeSelectionBox: true,
         showEdgeSelectionBox: true,
+      })
+    );
+    instance.use(
+      new Transform({
+        resizing: {
+          enabled: true,
+          minWidth: 50,
+          minHeight: 30,
+          orthogonal: true, // Display center handles
+          preserveAspectRatio: false, // Let user adjust height and width freely
+        }
       })
     );
 

@@ -13,6 +13,7 @@
     "@antv/x6": "^2.0.0",
     "@antv/x6-plugin-export": "^2.0.1",
     "@antv/x6-plugin-selection": "^2.2.2",
+    "@antv/x6-plugin-transform": "^2.1.8",
     "@antv/x6-react-shape": "^2.0.0",
     "lucide-react": "^0.395.0",
     "react": "^18.3.1",

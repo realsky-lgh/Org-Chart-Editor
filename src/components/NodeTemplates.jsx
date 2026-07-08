@@ -95,8 +95,8 @@ export function DeptNode({ node }) {
       border: `1px solid ${accent}`,
       borderRadius: '8px',
       padding: '12px',
-      width: '180px',
-      height: '90px',
+      width: '100%',
+      height: '100%',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
       borderTop: `4px solid ${accent}`,
       boxSizing: 'border-box'
@@ -142,8 +142,8 @@ export function PosNode({ node }) {
       border: '1px solid var(--border-color, #e2e8f0)',
       borderRadius: '8px',
       padding: '12px',
-      width: '180px',
-      height: '100px',
+      width: '100%',
+      height: '100%',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
       boxSizing: 'border-box'
     }}>
@@ -191,8 +191,8 @@ export function PersonNode({ node }) {
       border: '1px solid var(--accent-blue-border, #bfdbfe)',
       borderRadius: '20px',
       padding: '6px 14px',
-      width: '130px',
-      height: '36px',
+      width: '100%',
+      height: '100%',
       display: 'flex',
       alignItems: 'center',
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
