@@ -115,16 +115,16 @@ export default function App() {
 
   const handleZoomIn = () => {
     if (!graph) return;
-    // Zoom in by 5% relatively (step size reduced by 50%)
-    graph.zoom(1.05);
+    // Relative zoom in by 0.05 (5% increment)
+    graph.zoom(0.05);
   };
 
   const handleZoomOut = () => {
     if (!graph) return;
-    // Zoom out by 5% relatively (step size reduced by 50%)
+    // Relative zoom out by -0.05 (5% decrement)
     // Prevent zooming out below 0.1
     if (graph.zoom() > 0.15) {
-      graph.zoom(0.95);
+      graph.zoom(-0.05);
     }
   };
 
