@@ -22,6 +22,7 @@
   font-weight: 600;
   font-size: 15px;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .viewport-placeholder {
@@ -51,11 +52,17 @@ body {
   justify-content: space-between;
   padding: 0 20px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.header-bar::-webkit-scrollbar {
+  display: none;
 }
 .main-content {
   grid-row: 2;
   display: grid;
-  grid-template-columns: 240px 1fr 280px;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
   height: calc(100vh - 56px);
 }
 .sidebar-left {
@@ -395,6 +402,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .toolbar-group {
