@@ -225,7 +225,7 @@ export default function App() {
         shape: 'dept-node-react',
         x: x - 90,
         y: y - 45,
-        data: { name: '新部门', manager: '未匹配主管', color: '#2563eb' },
+        data: { name: '新部门', manager: '未匹配主管', color: '#3b3e45' },
         ports
       };
     } else if (type === 'pos') {
@@ -233,7 +233,7 @@ export default function App() {
         shape: 'pos-node-react',
         x: x - 90,
         y: y - 50,
-        data: { title: '新设岗位', level: 'P6', employees: [] },
+        data: { title: '新设岗位', level: 'P6', employees: [], color: '#3b3e45' },
         ports
       };
     } else if (type === 'person') {
@@ -241,7 +241,7 @@ export default function App() {
         shape: 'person-node-react',
         x: x - 65,
         y: y - 18,
-        data: { name: '新入职员工' },
+        data: { name: '新入职员工', color: '#3b3e45' },
         ports
       };
     } else if (type === 'text') {
@@ -353,7 +353,7 @@ export default function App() {
         shape: 'dept-node-react',
         x: 40,
         y: 40,
-        data: { name: '研发中心', manager: '张经理', color: '#2563eb' },
+        data: { name: '研发中心', manager: '张经理', color: '#3b3e45' },
         ports: nodePorts
       });
 

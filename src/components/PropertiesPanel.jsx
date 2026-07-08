@@ -9,7 +9,7 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
   // For batch edit local state
   const [batchWidth, setBatchWidth] = useState(180);
   const [batchHeight, setBatchHeight] = useState(90);
-  const [batchColor, setBatchColor] = useState('#2563eb');
+  const [batchColor, setBatchColor] = useState('#3b3e45');
 
   // Sync batch initial values from the first selected node
   useEffect(() => {
@@ -24,6 +24,8 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
         const data = firstNode.getData() || {};
         if (data.color) {
           setBatchColor(data.color);
+        } else {
+          setBatchColor('#3b3e45');
         }
       }
     }
@@ -38,7 +40,7 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
         setLocalData({
           name: data.name || '',
           manager: data.manager || '',
-          color: data.color || '#2563eb',
+          color: data.color || '#3b3e45',
           title: data.title || '',
           level: data.level || '',
           employees: Array.isArray(data.employees) ? data.employees.join(', ') : '',
@@ -345,14 +347,14 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     <input
                       type="color"
                       className="properties-color-picker"
-                      value={localData.color || '#2563eb'}
+                      value={localData.color || '#3b3e45'}
                       onChange={(e) => handleImmediateNodeChange('color', e.target.value)}
                     />
                     <input
                       type="text"
                       className="properties-input"
                       style={{ fontFamily: 'monospace' }}
-                      value={localData.color || '#2563eb'}
+                      value={localData.color || '#3b3e45'}
                       onChange={(e) => handleLocalChange('color', e.target.value)}
                       onBlur={() => handleCommitNodeField('color')}
                     />
@@ -396,6 +398,25 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     placeholder="例如: 张三, 李四"
                   />
                 </div>
+                <div className="properties-field">
+                  <label className="properties-label">主题颜色</label>
+                  <div className="properties-color-picker-wrapper">
+                    <input
+                      type="color"
+                      className="properties-color-picker"
+                      value={localData.color || '#3b3e45'}
+                      onChange={(e) => handleImmediateNodeChange('color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="properties-input"
+                      style={{ fontFamily: 'monospace' }}
+                      value={localData.color || '#3b3e45'}
+                      onChange={(e) => handleLocalChange('color', e.target.value)}
+                      onBlur={() => handleCommitNodeField('color')}
+                    />
+                  </div>
+                </div>
               </>
             )}
 
@@ -411,6 +432,25 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     onBlur={() => handleCommitNodeField('name')}
                     placeholder="输入员工姓名"
                   />
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">主题颜色</label>
+                  <div className="properties-color-picker-wrapper">
+                    <input
+                      type="color"
+                      className="properties-color-picker"
+                      value={localData.color || '#3b3e45'}
+                      onChange={(e) => handleImmediateNodeChange('color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="properties-input"
+                      style={{ fontFamily: 'monospace' }}
+                      value={localData.color || '#3b3e45'}
+                      onChange={(e) => handleLocalChange('color', e.target.value)}
+                      onBlur={() => handleCommitNodeField('color')}
+                    />
+                  </div>
                 </div>
               </>
             )}

@@ -25,7 +25,7 @@ const inputEventBlockers = {
 
 export function DeptNode({ node }) {
   const data = node.getData() || {};
-  const accent = data.color || '#2563eb';
+  const accent = data.color || '#3b3e45';
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -100,6 +100,7 @@ export function DeptNode({ node }) {
 
 export function PosNode({ node }) {
   const data = node.getData() || {};
+  const accent = data.color || '#3b3e45';
   const employees = data.employees || [];
 
   const handleKeyDown = (e) => {
@@ -126,7 +127,7 @@ export function PosNode({ node }) {
         onKeyDown={handleKeyDown}
         style={{
           background: '#ffffff',
-          border: '1px solid var(--accent-blue, #2563eb)',
+          border: `1px solid ${accent}`,
           borderRadius: '8px',
           padding: '6px',
           width: '100%',
@@ -134,7 +135,8 @@ export function PosNode({ node }) {
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          borderTop: `4px solid ${accent}`
         }}
       >
         <input
@@ -166,7 +168,7 @@ export function PosNode({ node }) {
   return (
     <div style={{
       background: 'var(--bg-panel, #ffffff)',
-      border: '1px solid var(--border-color, #e2e8f0)',
+      border: `1px solid ${accent}`,
       borderRadius: '8px',
       padding: '10px 12px',
       width: '100%',
@@ -175,7 +177,8 @@ export function PosNode({ node }) {
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      borderTop: `4px solid ${accent}`
     }}>
       <div>
         <div style={{ fontSize: '9px', color: 'var(--text-secondary, #64748b)', fontWeight: 'bold' }}>岗位 (POSITION)</div>
@@ -195,6 +198,7 @@ export function PosNode({ node }) {
 
 export function PersonNode({ node }) {
   const data = node.getData() || {};
+  const accent = data.color || '#3b3e45';
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -212,8 +216,8 @@ export function PersonNode({ node }) {
         {...inputEventBlockers}
         onKeyDown={handleKeyDown}
         style={{
-          background: 'var(--accent-blue-light, #eff6ff)',
-          border: '1px solid var(--accent-blue-border, #bfdbfe)',
+          background: accent + '12',
+          border: `1px solid ${accent}40`,
           borderRadius: '20px',
           padding: '2px 8px',
           width: '100%',
@@ -243,8 +247,8 @@ export function PersonNode({ node }) {
 
   return (
     <div style={{
-      background: 'var(--accent-blue-light, #eff6ff)',
-      border: '1px solid var(--accent-blue-border, #bfdbfe)',
+      background: accent + '12',
+      border: `1px solid ${accent}40`,
       borderRadius: '20px',
       padding: '6px 14px',
       width: '100%',
@@ -258,11 +262,11 @@ export function PersonNode({ node }) {
         width: '8px',
         height: '8px',
         borderRadius: '50%',
-        backgroundColor: 'var(--accent-blue, #2563eb)',
+        backgroundColor: accent,
         marginRight: '8px',
         flexShrink: 0
       }} />
-      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--accent-blue-text, #1e3a8a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <div style={{ fontSize: '12px', fontWeight: '500', color: accent, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {data.name || '匿名人员'}
       </div>
     </div>
