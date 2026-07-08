@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Graph } from '@antv/x6';
 import { register } from '@antv/x6-react-shape';
 import { Export } from '@antv/x6-plugin-export';
+import { Selection } from '@antv/x6-plugin-selection';
 import { DagreLayout } from '@antv/layout';
 import { DeptNode, PosNode, PersonNode } from './components/NodeTemplates';
 import './index.css';
@@ -192,11 +193,7 @@ export default function App() {
           },
         ],
       },
-      selecting: {
-        enabled: true,
-        rubberband: false, // Default rubberband disabled for simpler clicks
-        showNodeSelectionBox: true,
-      },
+
       connecting: {
         snap: true,
         allowBlank: false,
@@ -225,6 +222,14 @@ export default function App() {
 
     // Enable export plugin
     instance.use(new Export());
+    instance.use(
+      new Selection({
+        enabled: true,
+        rubberband: false,
+        showNodeSelectionBox: true,
+        showEdgeSelectionBox: true,
+      })
+    );
 
     const loadMockNodes = () => {
       instance.addNode({
@@ -297,6 +302,16 @@ export default function App() {
 
     instance.on('cell:selected', updateSelection);
     instance.on('cell:unselected', updateSelection);
+
+    // Double click to edit edge labels inline
+    instance.on('edge:dblclick', ({ edge }) => {
+      const labels = edge.getLabels() || [];
+      const currentLabel = labels[0]?.attrs?.text?.text || '';
+      const newLabel = window.prompt('编辑连线关系标签:', currentLabel);
+      if (newLabel !== null) {
+        edge.setLabels([{ attrs: { text: { text: newLabel } } }]);
+      }
+    });
     instance.on('cell:added', saveToLocalStorage);
     instance.on('cell:removed', saveToLocalStorage);
     instance.on('cell:change:*', () => {
