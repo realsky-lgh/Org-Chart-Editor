@@ -130,7 +130,11 @@ export default function App() {
 
   const handleZoomToFit = () => {
     if (!graph) return;
-    graph.zoomToFit({ padding: 20, maxZoom: 1 });
+    // Set generous right and left padding to prevent nodes from getting too close to side panels
+    graph.zoomToFit({
+      padding: { top: 40, right: 80, bottom: 40, left: 60 },
+      maxZoom: 1
+    });
   };
 
   const handleAutoLayout = (direction) => {
@@ -192,8 +196,11 @@ export default function App() {
     });
     graph.stopBatch('layout');
 
-    // Auto-fit viewport to show the entire layout centered
-    graph.zoomToFit({ padding: 20, maxZoom: 1 });
+    // Auto-fit viewport to show the entire layout centered with generous margins
+    graph.zoomToFit({
+      padding: { top: 40, right: 80, bottom: 40, left: 60 },
+      maxZoom: 1
+    });
   };
 
   const handleDragOver = (e) => {
