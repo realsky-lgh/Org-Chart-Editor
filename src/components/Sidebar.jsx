@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network, Briefcase, User, Save, FolderOpen, Trash2 } from 'lucide-react';
+import { Network, Briefcase, User, Save, FolderOpen, Trash2, Type } from 'lucide-react';
 
 export default function Sidebar({
   versions = [],
@@ -48,6 +48,28 @@ export default function Sidebar({
         <div className="mini-preview mini-person">
           <span className="mini-dot"></span>
           <span className="mini-text">人员</span>
+        </div>
+      )
+    },
+    {
+      type: 'text',
+      title: '文本标签',
+      description: '用于在架构图中添加自定义文本描述',
+      icon: Type,
+      preview: (
+        <div className="mini-preview" style={{
+          border: '1px dashed var(--border-color, #e2e8f0)',
+          borderRadius: '4px',
+          padding: '4px 8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-panel, #ffffff)',
+          height: '24px',
+          width: '80px',
+          boxSizing: 'border-box'
+        }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-secondary, #475569)', fontWeight: '500' }}>文本框</span>
         </div>
       )
     }

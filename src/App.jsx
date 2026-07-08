@@ -5,7 +5,7 @@ import { Export } from '@antv/x6-plugin-export';
 import { Selection } from '@antv/x6-plugin-selection';
 import { Transform } from '@antv/x6-plugin-transform';
 import { DagreLayout } from '@antv/layout';
-import { DeptNode, PosNode, PersonNode } from './components/NodeTemplates';
+import { DeptNode, PosNode, PersonNode, TextNode } from './components/NodeTemplates';
 import './index.css';
 import Sidebar from './components/Sidebar';
 import PropertiesPanel from './components/PropertiesPanel';
@@ -32,6 +32,13 @@ register({
   width: 130,
   height: 36,
   component: PersonNode,
+});
+
+register({
+  shape: 'text-node-react',
+  width: 140,
+  height: 40,
+  component: TextNode,
 });
 
 // Define shared ports configuration for all nodes (connectable top, bottom, left, right)
@@ -206,6 +213,20 @@ export default function App() {
         x: x - 65,
         y: y - 18,
         data: { name: '新入职员工' },
+        ports
+      };
+    } else if (type === 'text') {
+      nodeConfig = {
+        shape: 'text-node-react',
+        x: x - 70,
+        y: y - 20,
+        data: {
+          text: '双击输入文本',
+          fontFamily: 'sans-serif',
+          fontSize: 14,
+          fontWeight: 'normal',
+          color: '#0f172a'
+        },
         ports
       };
     }

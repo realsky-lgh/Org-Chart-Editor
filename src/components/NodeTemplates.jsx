@@ -13,6 +13,16 @@ const inputStyle = {
   color: '#0f172a'
 };
 
+// Common event blocker to allow default HTML input behaviors (focus, select, drag text) inside X6 React nodes
+const inputEventBlockers = {
+  onDoubleClick: (e) => e.stopPropagation(),
+  onMouseDown: (e) => e.stopPropagation(),
+  onMouseUp: (e) => e.stopPropagation(),
+  onPointerDown: (e) => e.stopPropagation(),
+  onPointerUp: (e) => e.stopPropagation(),
+  onClick: (e) => e.stopPropagation()
+};
+
 export function DeptNode({ node }) {
   const data = node.getData() || {};
   const accent = data.color || '#2563eb';
@@ -30,7 +40,7 @@ export function DeptNode({ node }) {
   if (data.isEditing) {
     return (
       <div 
-        onDoubleClick={(e) => e.stopPropagation()}
+        {...inputEventBlockers}
         onKeyDown={handleKeyDown}
         style={{
           background: '#ffffff',
@@ -112,7 +122,7 @@ export function PosNode({ node }) {
   if (data.isEditing) {
     return (
       <div 
-        onDoubleClick={(e) => e.stopPropagation()}
+        {...inputEventBlockers}
         onKeyDown={handleKeyDown}
         style={{
           background: '#ffffff',
@@ -194,7 +204,7 @@ export function PersonNode({ node }) {
   if (data.isEditing) {
     return (
       <div 
-        onDoubleClick={(e) => e.stopPropagation()}
+        {...inputEventBlockers}
         onKeyDown={handleKeyDown}
         style={{
           background: 'var(--accent-blue-light, #eff6ff)',
@@ -250,6 +260,73 @@ export function PersonNode({ node }) {
       <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--accent-blue-text, #1e3a8a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {data.name || '匿名人员'}
       </div>
+    </div>
+  );
+}
+
+export function TextNode({ node }) {
+  const data = node.getData() || {};
+  const fontFamily = data.fontFamily || 'sans-serif';
+  const fontSize = data.fontSize || 14;
+  const fontWeight = data.fontWeight || 'normal';
+  const color = data.color || '#0f172a';
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      node.setData({ ...data, isEditing: false });
+    }
+  };
+
+  if (data.isEditing) {
+    return (
+      <div 
+        {...inputEventBlockers}
+        onKeyDown={handleKeyDown}
+        style={{
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          padding: '4px'
+        }}
+      >
+        <input
+          type="text"
+          value={data.text || ''}
+          onChange={(e) => node.setData({ ...data, text: e.target.value })}
+          placeholder="输入文本"
+          style={{
+            ...inputStyle,
+            height: '100%',
+            fontFamily,
+            fontSize: `${fontSize}px`,
+            fontWeight,
+            color
+          }}
+          autoFocus
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      boxSizing: 'border-box',
+      padding: '4px 8px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily,
+      fontSize: `${fontSize}px`,
+      fontWeight,
+      color,
+      wordBreak: 'break-all',
+      overflow: 'hidden',
+      textAlign: 'center',
+      userSelect: 'none'
+    }}>
+      {data.text || '双击编辑文本'}
     </div>
   );
 }

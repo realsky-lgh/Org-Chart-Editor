@@ -18,6 +18,10 @@ export default function PropertiesPanel({ selectedCellId, graph, onUpdate }) {
           title: data.title || '',
           level: data.level || '',
           employees: Array.isArray(data.employees) ? data.employees.join(', ') : '',
+          text: data.text || '',
+          fontFamily: data.fontFamily || 'sans-serif',
+          fontSize: data.fontSize || 14,
+          fontWeight: data.fontWeight || 'normal',
         });
       } else if (cell.isEdge()) {
         const strokeDash = cell.getAttrByPath('line/strokeDasharray');
@@ -223,7 +227,80 @@ export default function PropertiesPanel({ selectedCellId, graph, onUpdate }) {
               </>
             )}
 
-            {shape !== 'dept-node-react' && shape !== 'pos-node-react' && shape !== 'person-node-react' && (
+            {shape === 'text-node-react' && (
+              <>
+                <div className="properties-field">
+                  <label className="properties-label">文本内容</label>
+                  <input
+                    type="text"
+                    className="properties-input"
+                    value={localData.text || ''}
+                    onChange={(e) => handleLocalChange('text', e.target.value)}
+                    onBlur={() => handleCommitNodeField('text')}
+                    placeholder="输入自定义文字"
+                  />
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">字体 (Font Family)</label>
+                  <select
+                    className="properties-select"
+                    value={localData.fontFamily || 'sans-serif'}
+                    onChange={(e) => handleImmediateNodeChange('fontFamily', e.target.value)}
+                  >
+                    <option value="sans-serif">无衬线 (Sans-Serif / 默认)</option>
+                    <option value="serif">衬线 (Serif)</option>
+                    <option value="monospace">等宽 (Monospace)</option>
+                    <option value="Microsoft YaHei">微软雅黑</option>
+                    <option value="SimSun">宋体</option>
+                    <option value="KaiTi">楷体</option>
+                  </select>
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">字号 (Size in px)</label>
+                  <input
+                    type="number"
+                    className="properties-input"
+                    value={localData.fontSize || 14}
+                    onChange={(e) => handleLocalChange('fontSize', parseInt(e.target.value) || 14)}
+                    onBlur={() => handleCommitNodeField('fontSize')}
+                    placeholder="例如: 12, 14, 16, 20"
+                  />
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">字形 (Weight / Style)</label>
+                  <select
+                    className="properties-select"
+                    value={localData.fontWeight || 'normal'}
+                    onChange={(e) => handleImmediateNodeChange('fontWeight', e.target.value)}
+                  >
+                    <option value="normal">常规 (Normal)</option>
+                    <option value="bold">加粗 (Bold)</option>
+                    <option value="italic">斜体 (Italic)</option>
+                  </select>
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">文本颜色</label>
+                  <div className="properties-color-picker-wrapper">
+                    <input
+                      type="color"
+                      className="properties-color-picker"
+                      value={localData.color || '#0f172a'}
+                      onChange={(e) => handleImmediateNodeChange('color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="properties-input"
+                      style={{ fontFamily: 'monospace' }}
+                      value={localData.color || '#0f172a'}
+                      onChange={(e) => handleLocalChange('color', e.target.value)}
+                      onBlur={() => handleCommitNodeField('color')}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {shape !== 'dept-node-react' && shape !== 'pos-node-react' && shape !== 'person-node-react' && shape !== 'text-node-react' && (
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 未知节点类型: {shape}
               </div>
