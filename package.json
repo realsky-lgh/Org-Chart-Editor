@@ -12,6 +12,7 @@
     "@antv/layout": "^0.3.3",
     "@antv/x6": "^2.0.0",
     "@antv/x6-plugin-export": "^2.0.1",
+    "@antv/x6-plugin-history": "^2.2.4",
     "@antv/x6-plugin-selection": "^2.2.2",
     "@antv/x6-plugin-transform": "^2.1.8",
     "@antv/x6-react-shape": "^2.0.0",

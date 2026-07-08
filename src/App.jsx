@@ -4,6 +4,7 @@ import { register } from '@antv/x6-react-shape';
 import { Export } from '@antv/x6-plugin-export';
 import { Selection } from '@antv/x6-plugin-selection';
 import { Transform } from '@antv/x6-plugin-transform';
+import { History } from '@antv/x6-plugin-history';
 import { DagreLayout } from '@antv/layout';
 import { DeptNode, PosNode, PersonNode, TextNode } from './components/NodeTemplates';
 import './index.css';
@@ -61,6 +62,7 @@ export default function App() {
   const containerRef = useRef(null);
   const [graph, setGraph] = useState(null);
   const [selectedCellId, setSelectedCellId] = useState(null);
+  const [selectedCellIds, setSelectedCellIds] = useState([]);
   const [tick, setTick] = useState(0);
   const triggerUpdate = () => setTick(t => t + 1);
 
@@ -324,6 +326,12 @@ export default function App() {
         }
       })
     );
+    instance.use(
+      new History({
+        enabled: true,
+        stackSize: 20
+      })
+    );
 
     const loadMockNodes = () => {
       instance.addNode({
@@ -373,6 +381,8 @@ export default function App() {
     // Event listener for selection change
     const updateSelection = () => {
       const selected = instance.getSelectedCells();
+      const ids = selected.map(cell => cell.id);
+      setSelectedCellIds(ids);
       if (selected.length > 0) {
         setSelectedCellId(selected[0].id);
       } else {
@@ -452,22 +462,73 @@ export default function App() {
       saveToLocalStorage();
     });
 
+    const duplicateSelectedCells = () => {
+      if (!instance) return;
+      const selected = instance.getSelectedCells().filter(cell => cell.isNode());
+      if (selected.length === 0) return;
+
+      const newNodes = [];
+      selected.forEach(node => {
+        const model = node.toJSON();
+        const x = (model.position?.x || 0) + 40;
+        const y = (model.position?.y || 0) + 40;
+        
+        const nodeConfig = {
+          ...model,
+          id: undefined,
+          position: { x, y },
+          data: {
+            ...(model.data || {}),
+            isEditing: false
+          }
+        };
+        const newNode = instance.addNode(nodeConfig);
+        newNodes.push(newNode);
+      });
+
+      if (newNodes.length > 0) {
+        instance.cleanSelection();
+        instance.select(newNodes);
+        updateSelection();
+      }
+    };
+
     const handleKeyDown = (e) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && instance) {
-        // Only delete if the user is not currently focusing an input/textarea element
-        const activeEl = document.activeElement;
-        if (activeEl && (
-          activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          activeEl.tagName === 'SELECT' ||
-          activeEl.isContentEditable
-        )) {
-          return;
+      const activeEl = document.activeElement;
+      const isInputActive = activeEl && (
+        activeEl.tagName === 'INPUT' ||
+        activeEl.tagName === 'TEXTAREA' ||
+        activeEl.tagName === 'SELECT' ||
+        activeEl.isContentEditable
+      );
+
+      if (isInputActive) {
+        return;
+      }
+
+      // 1. Ctrl-Z for Undo
+      if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (instance.canUndo && instance.canUndo()) {
+          instance.undo();
+          setSelectedCellId(null);
+          setSelectedCellIds([]);
         }
+      }
+
+      // 2. Ctrl-D for Duplicate
+      if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        duplicateSelectedCells();
+      }
+
+      // 3. Delete / Backspace for Delete
+      if (e.key === 'Delete' || e.key === 'Backspace') {
         const selected = instance.getSelectedCells();
         if (selected.length > 0) {
           instance.removeCells(selected);
           setSelectedCellId(null);
+          setSelectedCellIds([]);
         }
       }
     };
@@ -590,7 +651,12 @@ export default function App() {
           {/* AntV X6 Canvas container */}
         </main>
         <aside className="properties-panel">
-          <PropertiesPanel selectedCellId={selectedCellId} graph={graph} onUpdate={triggerUpdate} />
+          <PropertiesPanel
+            selectedCellId={selectedCellId}
+            selectedCellIds={selectedCellIds}
+            graph={graph}
+            onUpdate={triggerUpdate}
+          />
         </aside>
       </div>
     </div>

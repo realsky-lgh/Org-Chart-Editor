@@ -1,9 +1,195 @@
 import React, { useEffect, useState } from 'react';
 
-export default function PropertiesPanel({ selectedCellId, graph, onUpdate }) {
+export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], graph, onUpdate }) {
   const [localData, setLocalData] = useState({});
 
   const cell = graph ? graph.getCellById(selectedCellId) : null;
+  const isMultiple = selectedCellIds.length > 1;
+
+  // For batch edit local state
+  const [batchWidth, setBatchWidth] = useState(180);
+  const [batchHeight, setBatchHeight] = useState(90);
+  const [batchColor, setBatchColor] = useState('#2563eb');
+
+  // Sync batch initial values from the first selected node
+  useEffect(() => {
+    if (isMultiple && graph) {
+      const firstNode = selectedCellIds
+        .map(id => graph.getCellById(id))
+        .find(cell => cell && cell.isNode());
+      if (firstNode) {
+        const size = firstNode.getSize();
+        setBatchWidth(size.width);
+        setBatchHeight(size.height);
+        const data = firstNode.getData() || {};
+        if (data.color) {
+          setBatchColor(data.color);
+        }
+      }
+    }
+  }, [isMultiple, selectedCellIds, graph]);
+
+  const handleApplyBatchSize = () => {
+    if (!graph) return;
+    const nodes = selectedCellIds
+      .map(id => graph.getCellById(id))
+      .filter(cell => cell && cell.isNode());
+    
+    if (nodes.length > 0) {
+      graph.startBatch('batch-resize');
+      nodes.forEach(n => {
+        n.setSize(batchWidth, batchHeight);
+      });
+      graph.stopBatch('batch-resize');
+      if (onUpdate) onUpdate();
+    }
+  };
+
+  const handleApplyBatchColor = (newColor) => {
+    if (!graph) return;
+    setBatchColor(newColor);
+    const nodes = selectedCellIds
+      .map(id => graph.getCellById(id))
+      .filter(cell => cell && cell.isNode());
+    
+    if (nodes.length > 0) {
+      graph.startBatch('batch-color');
+      nodes.forEach(n => {
+        const data = n.getData() || {};
+        n.setData({ ...data, color: newColor });
+      });
+      graph.stopBatch('batch-color');
+      if (onUpdate) onUpdate();
+    }
+  };
+
+  const handleBatchDelete = () => {
+    if (!graph) return;
+    if (window.confirm(`确定要删除选中的 ${selectedCellIds.length} 个元素吗？`)) {
+      const cells = selectedCellIds
+        .map(id => graph.getCellById(id))
+        .filter(Boolean);
+      if (cells.length > 0) {
+        graph.removeCells(cells);
+        if (onUpdate) onUpdate();
+      }
+    }
+  };
+
+  if (isMultiple) {
+    const selectedNodesCount = selectedCellIds
+      .map(id => graph.getCellById(id))
+      .filter(cell => cell && cell.isNode()).length;
+    const selectedEdgesCount = selectedCellIds.length - selectedNodesCount;
+
+    return (
+      <div className="properties-panel-container">
+        <div className="properties-panel-header">
+          <div className="properties-panel-title">
+            <span>👥 批量编辑 (Batch Edit)</span>
+          </div>
+          <div className="properties-panel-subtitle">
+            已选中 {selectedCellIds.length} 个元素 ({selectedNodesCount} 个节点, {selectedEdgesCount} 条连线)
+          </div>
+        </div>
+
+        <div className="properties-form-group">
+          {selectedNodesCount > 0 && (
+            <>
+              {/* Batch Size Controls */}
+              <div className="properties-field">
+                <label className="properties-label" style={{ color: 'var(--accent-blue, #2563eb)' }}>批量调整节点尺寸</label>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '2px' }}>宽度 (W)</div>
+                    <input
+                      type="number"
+                      className="properties-input"
+                      value={batchWidth}
+                      onChange={(e) => setBatchWidth(parseInt(e.target.value) || 0)}
+                      placeholder="宽度"
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '2px' }}>高度 (H)</div>
+                    <input
+                      type="number"
+                      className="properties-input"
+                      value={batchHeight}
+                      onChange={(e) => setBatchHeight(parseInt(e.target.value) || 0)}
+                      placeholder="高度"
+                    />
+                  </div>
+                </div>
+                <button
+                  className="btn-action"
+                  onClick={handleApplyBatchSize}
+                  style={{
+                    marginTop: '8px',
+                    width: '100%',
+                    justifyContent: 'center',
+                    background: 'var(--accent-blue-light, #eff6ff)',
+                    borderColor: 'var(--accent-blue-border, #bfdbfe)',
+                    color: 'var(--accent-blue, #2563eb)',
+                    fontWeight: '600',
+                    fontSize: '11px',
+                    padding: '6px 0'
+                  }}
+                >
+                  应用尺寸到选中节点
+                </button>
+              </div>
+
+              {/* Batch Color Controls */}
+              <div className="properties-field" style={{ marginTop: '12px' }}>
+                <label className="properties-label" style={{ color: 'var(--accent-blue, #2563eb)' }}>批量更改主题颜色</label>
+                <div className="properties-color-picker-wrapper" style={{ marginTop: '4px' }}>
+                  <input
+                    type="color"
+                    className="properties-color-picker"
+                    value={batchColor}
+                    onChange={(e) => handleApplyBatchColor(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="properties-input"
+                    style={{ fontFamily: 'monospace' }}
+                    value={batchColor}
+                    onChange={(e) => handleApplyBatchColor(e.target.value)}
+                    placeholder="#2563eb"
+                  />
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  提示: 颜色修改将应用于所有选中部门卡片的主色调
+                </div>
+              </div>
+            </>
+          )}
+
+          <div style={{ margin: '16px 0', borderTop: '1px solid var(--border-color, #e2e8f0)' }} />
+
+          {/* Batch Actions */}
+          <div className="properties-field">
+            <label className="properties-label">批量操作</label>
+            <button
+              className="btn-action btn-danger"
+              onClick={handleBatchDelete}
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                fontWeight: '600',
+                fontSize: '12px',
+                padding: '8px 0',
+                marginTop: '6px'
+              }}
+            >
+              🗑️ 删除所有选中元素
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!cell) return;
