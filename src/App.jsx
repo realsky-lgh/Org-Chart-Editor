@@ -60,6 +60,50 @@ export default function App() {
   const triggerUpdateRef = useRef(triggerUpdate);
   triggerUpdateRef.current = triggerUpdate;
 
+  const [versions, setVersions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('org-chart-versions');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleSaveVersion = (name) => {
+    if (!graph) return;
+    const finalName = name || window.prompt('请输入本次保存的版本名称:', '版本_' + new Date().toLocaleString());
+    if (!finalName) return;
+
+    const newVersion = {
+      id: Date.now().toString(),
+      name: finalName,
+      timestamp: new Date().toLocaleString(),
+      data: graph.toJSON()
+    };
+
+    const updated = [newVersion, ...versions];
+    setVersions(updated);
+    localStorage.setItem('org-chart-versions', JSON.stringify(updated));
+  };
+
+  const handleLoadVersion = (version) => {
+    if (!graph) return;
+    if (window.confirm(`确定要载入版本「${version.name}」吗？当前画布中的修改将被覆盖。`)) {
+      graph.fromJSON(version.data);
+      // Sync to auto-save key so reload works
+      localStorage.setItem('org-chart-progress', JSON.stringify(version.data));
+      triggerUpdate();
+    }
+  };
+
+  const handleDeleteVersion = (id) => {
+    if (window.confirm('确定要删除该保存版本吗？此操作不可撤销。')) {
+      const updated = versions.filter(v => v.id !== id);
+      setVersions(updated);
+      localStorage.setItem('org-chart-versions', JSON.stringify(updated));
+    }
+  };
+
   const handleAutoLayout = (direction) => {
     if (!graph) return;
 
@@ -474,7 +518,12 @@ export default function App() {
       </header>
       <div className="main-content">
         <aside className="sidebar-left">
-          <Sidebar />
+          <Sidebar
+            versions={versions}
+            onLoadVersion={handleLoadVersion}
+            onDeleteVersion={handleDeleteVersion}
+            onSaveVersion={handleSaveVersion}
+          />
         </aside>
         <main
           className="canvas-container"
