@@ -526,7 +526,10 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="header-bar">
-        <div className="logo-title">组织结构图编辑器 (Org Chart Editor)</div>
+        <div className="logo-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', borderRadius: '4px', objectFit: 'contain' }} />
+          <span>组织结构图编辑器 (Org Chart Editor)</span>
+        </div>
         <Toolbar
           onImportJSON={handleImportJSON}
           onExportJSON={handleExportJSON}
