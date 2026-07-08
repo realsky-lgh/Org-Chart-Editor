@@ -1,0 +1,26 @@
+{
+  "name": "org-chart-editor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@antv/layout": "^0.3.3",
+    "@antv/x6": "^2.0.0",
+    "@antv/x6-plugin-export": "^2.0.1",
+    "@antv/x6-react-shape": "^2.0.0",
+    "lucide-react": "^0.395.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.3.1"
+  }
+}
