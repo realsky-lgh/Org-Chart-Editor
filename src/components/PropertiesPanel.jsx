@@ -29,6 +29,54 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
     }
   }, [isMultiple, selectedCellIds, graph]);
 
+  useEffect(() => {
+    if (!cell) return;
+
+    const syncData = () => {
+      if (cell.isNode()) {
+        const data = cell.getData() || {};
+        setLocalData({
+          name: data.name || '',
+          manager: data.manager || '',
+          color: data.color || '#2563eb',
+          title: data.title || '',
+          level: data.level || '',
+          employees: Array.isArray(data.employees) ? data.employees.join(', ') : '',
+          text: data.text || '',
+          fontFamily: data.fontFamily || 'sans-serif',
+          fontSize: data.fontSize || 14,
+          fontWeight: data.fontWeight || 'normal',
+        });
+      } else if (cell.isEdge()) {
+        const strokeDash = cell.getAttrByPath('line/strokeDasharray');
+        const targetMarker = cell.getAttrByPath('line/targetMarker');
+        const labels = cell.getLabels() || [];
+        const labelText = labels[0]?.attrs?.text?.text || '';
+
+        setLocalData({
+          lineType: strokeDash === '5,5' ? 'dashed' : 'solid',
+          arrowhead: (targetMarker && targetMarker !== 'none' && targetMarker !== null) ? 'block' : 'none',
+          label: labelText,
+        });
+      }
+    };
+
+    syncData();
+
+    // Subscribe to external mutations (undo/redo, layouts, etc.)
+    if (cell.isNode()) {
+      cell.on('change:data', syncData);
+      return () => cell.off('change:data', syncData);
+    } else if (cell.isEdge()) {
+      cell.on('change:attrs', syncData);
+      cell.on('change:labels', syncData);
+      return () => {
+        cell.off('change:attrs', syncData);
+        cell.off('change:labels', syncData);
+      };
+    }
+  }, [selectedCellId, cell]);
+
   const handleApplyBatchSize = () => {
     if (!graph) return;
     const nodes = selectedCellIds
@@ -191,53 +239,7 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
     );
   }
 
-  useEffect(() => {
-    if (!cell) return;
 
-    const syncData = () => {
-      if (cell.isNode()) {
-        const data = cell.getData() || {};
-        setLocalData({
-          name: data.name || '',
-          manager: data.manager || '',
-          color: data.color || '#2563eb',
-          title: data.title || '',
-          level: data.level || '',
-          employees: Array.isArray(data.employees) ? data.employees.join(', ') : '',
-          text: data.text || '',
-          fontFamily: data.fontFamily || 'sans-serif',
-          fontSize: data.fontSize || 14,
-          fontWeight: data.fontWeight || 'normal',
-        });
-      } else if (cell.isEdge()) {
-        const strokeDash = cell.getAttrByPath('line/strokeDasharray');
-        const targetMarker = cell.getAttrByPath('line/targetMarker');
-        const labels = cell.getLabels() || [];
-        const labelText = labels[0]?.attrs?.text?.text || '';
-
-        setLocalData({
-          lineType: strokeDash === '5,5' ? 'dashed' : 'solid',
-          arrowhead: (targetMarker && targetMarker !== 'none' && targetMarker !== null) ? 'block' : 'none',
-          label: labelText,
-        });
-      }
-    };
-
-    syncData();
-
-    // Subscribe to external mutations (undo/redo, layouts, etc.)
-    if (cell.isNode()) {
-      cell.on('change:data', syncData);
-      return () => cell.off('change:data', syncData);
-    } else if (cell.isEdge()) {
-      cell.on('change:attrs', syncData);
-      cell.on('change:labels', syncData);
-      return () => {
-        cell.off('change:attrs', syncData);
-        cell.off('change:labels', syncData);
-      };
-    }
-  }, [selectedCellId, cell]);
 
   if (!selectedCellId || !graph || !cell) {
     return (
