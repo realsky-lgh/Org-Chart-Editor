@@ -1,93 +1,69 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 
-// Reusable inline-editable text component
-function EditableText({ value, onSave, placeholder, style }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [localValue, setLocalValue] = useState(value);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      setIsEditing(false);
-      onSave(localValue);
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      setLocalValue(value);
-    }
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    onSave(localValue);
-  };
-
-  if (isEditing) {
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        style={{
-          width: '100%',
-          boxSizing: 'border-box',
-          padding: '2px 4px',
-          fontSize: 'inherit',
-          fontFamily: 'inherit',
-          fontWeight: 'inherit',
-          color: 'inherit',
-          border: '1px solid var(--accent-blue, #2563eb)',
-          borderRadius: '4px',
-          outline: 'none',
-          background: '#fff',
-          ...style
-        }}
-      />
-    );
-  }
-
-  return (
-    <div
-      onDoubleClick={(e) => {
-        e.stopPropagation(); // Prevent canvas zoom/drag on dblclick
-        setIsEditing(true);
-      }}
-      title="双击进行编辑"
-      style={{
-        cursor: 'text',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        minWidth: '20px',
-        minHeight: '1.2em',
-        ...style
-      }}
-    >
-      {value || placeholder || ' '}
-    </div>
-  );
-}
+const inputStyle = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '4px 6px',
+  fontSize: '11px',
+  border: '1px solid #cbd5e1',
+  borderRadius: '4px',
+  outline: 'none',
+  fontFamily: 'inherit',
+  background: '#ffffff',
+  color: '#0f172a'
+};
 
 export function DeptNode({ node }) {
   const data = node.getData() || {};
   const accent = data.color || '#2563eb';
 
-  const handleSave = (field, val) => {
-    node.setData({ ...data, [field]: val });
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      node.setData({ ...data, isEditing: false });
+    }
   };
+
+  const handleInputChange = (field, value) => {
+    node.setData({ ...data, [field]: value });
+  };
+
+  if (data.isEditing) {
+    return (
+      <div 
+        onDoubleClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
+        style={{
+          background: '#ffffff',
+          border: `1px solid ${accent}`,
+          borderRadius: '8px',
+          padding: '8px',
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          borderTop: `4px solid ${accent}`
+        }}
+      >
+        <input
+          type="text"
+          value={data.name || ''}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          placeholder="部门名称"
+          style={inputStyle}
+          autoFocus
+        />
+        <input
+          type="text"
+          value={data.manager || ''}
+          onChange={(e) => handleInputChange('manager', e.target.value)}
+          placeholder="负责人"
+          style={inputStyle}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -102,20 +78,11 @@ export function DeptNode({ node }) {
       boxSizing: 'border-box'
     }}>
       <div style={{ fontSize: '10px', color: 'var(--text-secondary, #64748b)', fontWeight: 'bold' }}>部门 (DEPARTMENT)</div>
-      <EditableText
-        value={data.name || ''}
-        placeholder="双击编辑部门"
-        onSave={(val) => handleSave('name', val)}
-        style={{ fontWeight: 'bold', marginTop: '4px', fontSize: '13px', color: 'var(--text-primary, #0f172a)' }}
-      />
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary, #475569)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span>负责人:</span>
-        <EditableText
-          value={data.manager || ''}
-          placeholder="无"
-          onSave={(val) => handleSave('manager', val)}
-          style={{ flex: 1, fontSize: '11px' }}
-        />
+      <div style={{ fontWeight: 'bold', marginTop: '4px', fontSize: '13px', color: 'var(--text-primary, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {data.name || '未命名部门'}
+      </div>
+      <div style={{ fontSize: '11px', color: 'var(--text-secondary, #475569)', marginTop: '6px' }}>
+        负责人: {data.manager || '无'}
       </div>
     </div>
   );
@@ -125,16 +92,66 @@ export function PosNode({ node }) {
   const data = node.getData() || {};
   const employees = data.employees || [];
 
-  const handleSave = (field, val) => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      node.setData({ ...data, isEditing: false });
+    }
+  };
+
+  const handleInputChange = (field, value) => {
     if (field === 'employees') {
-      const arr = val.split(',')
+      const arr = value.split(',')
         .map(s => s.trim())
         .filter(Boolean);
       node.setData({ ...data, employees: arr });
     } else {
-      node.setData({ ...data, [field]: val });
+      node.setData({ ...data, [field]: value });
     }
   };
+
+  if (data.isEditing) {
+    return (
+      <div 
+        onDoubleClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
+        style={{
+          background: '#ffffff',
+          border: '1px solid var(--accent-blue, #2563eb)',
+          borderRadius: '8px',
+          padding: '6px',
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}
+      >
+        <input
+          type="text"
+          value={data.title || ''}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+          placeholder="岗位名称"
+          style={inputStyle}
+          autoFocus
+        />
+        <input
+          type="text"
+          value={data.level || ''}
+          onChange={(e) => handleInputChange('level', e.target.value)}
+          placeholder="职级 (P6/P7)"
+          style={inputStyle}
+        />
+        <input
+          type="text"
+          value={employees.join(', ')}
+          onChange={(e) => handleInputChange('employees', e.target.value)}
+          placeholder="成员列表 (逗号分隔)"
+          style={inputStyle}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -148,30 +165,13 @@ export function PosNode({ node }) {
       boxSizing: 'border-box'
     }}>
       <div style={{ fontSize: '10px', color: 'var(--text-secondary, #64748b)', fontWeight: 'bold' }}>岗位 (POSITION)</div>
-      <EditableText
-        value={data.title || ''}
-        placeholder="双击编辑岗位"
-        onSave={(val) => handleSave('title', val)}
-        style={{ fontWeight: 'bold', marginTop: '4px', fontSize: '12px', color: 'var(--text-primary, #0f172a)' }}
-      />
-      <div style={{ fontSize: '10px', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-        <span>等级:</span>
-        <EditableText
-          value={data.level || ''}
-          placeholder="P-"
-          onSave={(val) => handleSave('level', val)}
-          style={{ flex: 1, fontSize: '10px' }}
-        />
+      <div style={{ fontWeight: 'bold', marginTop: '4px', fontSize: '12px', color: 'var(--text-primary, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {data.title || '新岗位'}
       </div>
-      <div style={{ borderTop: '1px solid var(--border-color, #f1f5f9)', marginTop: '8px', paddingTop: '6px' }}>
-        <div style={{ fontSize: '11px', color: 'var(--text-secondary, #475569)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span>成员:</span>
-          <EditableText
-            value={employees.join(', ')}
-            placeholder="暂无"
-            onSave={(val) => handleSave('employees', val)}
-            style={{ flex: 1, fontSize: '11px' }}
-          />
+      <div style={{ fontSize: '10px', color: 'var(--text-muted, #94a3b8)' }}>等级: {data.level || 'P-'}</div>
+      <div style={{ borderTop: '1px solid var(--border-color, #f1f5f9)', marginTop: '8px', paddingTop: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-secondary, #475569)' }}>
+          成员: {employees.length > 0 ? employees.join(', ') : '暂无'}
         </div>
       </div>
     </div>
@@ -181,9 +181,50 @@ export function PosNode({ node }) {
 export function PersonNode({ node }) {
   const data = node.getData() || {};
 
-  const handleSave = (val) => {
-    node.setData({ ...data, name: val });
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      node.setData({ ...data, isEditing: false });
+    }
   };
+
+  const handleInputChange = (value) => {
+    node.setData({ ...data, name: value });
+  };
+
+  if (data.isEditing) {
+    return (
+      <div 
+        onDoubleClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
+        style={{
+          background: 'var(--accent-blue-light, #eff6ff)',
+          border: '1px solid var(--accent-blue-border, #bfdbfe)',
+          borderRadius: '20px',
+          padding: '2px 8px',
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center'
+        }}
+      >
+        <input
+          type="text"
+          value={data.name || ''}
+          onChange={(e) => handleInputChange(e.target.value)}
+          placeholder="员工姓名"
+          style={{
+            ...inputStyle,
+            padding: '2px 6px',
+            fontSize: '11px',
+            borderRadius: '12px',
+            border: '1px solid #bfdbfe'
+          }}
+          autoFocus
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -206,12 +247,9 @@ export function PersonNode({ node }) {
         marginRight: '8px',
         flexShrink: 0
       }} />
-      <EditableText
-        value={data.name || ''}
-        placeholder="双击编辑姓名"
-        onSave={handleSave}
-        style={{ fontSize: '12px', fontWeight: '500', color: 'var(--accent-blue-text, #1e3a8a)', flex: 1 }}
-      />
+      <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--accent-blue-text, #1e3a8a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {data.name || '匿名人员'}
+      </div>
     </div>
   );
 }

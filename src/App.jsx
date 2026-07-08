@@ -324,6 +324,34 @@ export default function App() {
         edge.setLabels([{ attrs: { text: { text: newLabel } } }]);
       }
     });
+
+    // Double click to enter node editing state (whole card edit mode)
+    instance.on('node:dblclick', ({ node }) => {
+      const data = node.getData() || {};
+      node.setData({ ...data, isEditing: true });
+    });
+
+    // Click blank canvas to exit all editing states
+    instance.on('blank:click', () => {
+      instance.getNodes().forEach(n => {
+        const d = n.getData() || {};
+        if (d.isEditing) {
+          n.setData({ ...d, isEditing: false });
+        }
+      });
+    });
+
+    // Click a node to exit editing state on all OTHER nodes
+    instance.on('node:click', ({ node }) => {
+      instance.getNodes().forEach(n => {
+        if (n.id !== node.id) {
+          const d = n.getData() || {};
+          if (d.isEditing) {
+            n.setData({ ...d, isEditing: false });
+          }
+        }
+      });
+    });
     instance.on('cell:added', saveToLocalStorage);
     instance.on('cell:removed', saveToLocalStorage);
     instance.on('cell:change:*', () => {
