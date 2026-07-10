@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Download, Upload, Image, FileText, Printer, Trash2, RefreshCw, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Download, Upload, Image, FileText, Printer, Trash2, RefreshCw, ZoomIn, ZoomOut, Maximize, Lock } from 'lucide-react';
 
 export default function Toolbar({
   onImportJSON,
@@ -12,6 +12,7 @@ export default function Toolbar({
   onZoomIn,
   onZoomOut,
   onZoomToFit,
+  onChangePassword,
 }) {
   const fileInputRef = useRef(null);
 
@@ -131,6 +132,14 @@ export default function Toolbar({
       <div className="toolbar-divider" />
 
       <div className="toolbar-group">
+        <button
+          className="btn-action"
+          onClick={onChangePassword}
+          title="修改密码"
+        >
+          <Lock size={16} />
+          <span>修改密码</span>
+        </button>
         <button
           className="btn-action btn-danger"
           onClick={onClearCanvas}
