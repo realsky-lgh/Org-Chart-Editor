@@ -5,33 +5,35 @@ import { Export } from '@antv/x6-plugin-export';
 import { Selection } from '@antv/x6-plugin-selection';
 import { Transform } from '@antv/x6-plugin-transform';
 import { History } from '@antv/x6-plugin-history';
+import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { DagreLayout } from '@antv/layout';
 import { DeptNode, PosNode, PersonNode, TextNode } from './components/NodeTemplates';
 import './index.css';
 import Sidebar from './components/Sidebar';
 import PropertiesPanel from './components/PropertiesPanel';
 import Toolbar from './components/Toolbar';
+import { jsPDF } from 'jspdf';
 
 
 // Register the custom shapes for Departments, Positions, and People
 register({
   shape: 'dept-node-react',
-  width: 180,
-  height: 90,
+  width: 260,
+  height: 120,
   component: DeptNode,
 });
 
 register({
   shape: 'pos-node-react',
-  width: 180,
+  width: 260,
   height: 100,
   component: PosNode,
 });
 
 register({
   shape: 'person-node-react',
-  width: 130,
-  height: 36,
+  width: 140,
+  height: 54,
   component: PersonNode,
 });
 
@@ -63,7 +65,37 @@ export default function App() {
   const [graph, setGraph] = useState(null);
   const [selectedCellId, setSelectedCellId] = useState(null);
   const [selectedCellIds, setSelectedCellIds] = useState([]);
+  const [batchWidth, setBatchWidth] = useState(260);
+  const [batchHeight, setBatchHeight] = useState(120);
+
+  const [logoUrl, setLogoUrl] = useState(() => localStorage.getItem('custom-logo') || '/logo.png');
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const url = event.target.result;
+        setLogoUrl(url);
+        localStorage.setItem('custom-logo', url);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  useEffect(() => {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = logoUrl;
+  }, [logoUrl]);
+
   const [tick, setTick] = useState(0);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const triggerUpdate = () => setTick(t => t + 1);
 
   const triggerUpdateRef = useRef(triggerUpdate);
@@ -129,10 +161,15 @@ export default function App() {
   };
 
   const handleZoomToFit = () => {
-    if (!graph) return;
+    if (!graph || !containerRef.current) return;
+    // Force a resize to the container's current client dimensions to ensure we have the exact visible bounds
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+    graph.resize(width, height);
+
     // Set generous right and left padding to prevent nodes from getting too close to side panels
     graph.zoomToFit({
-      padding: { top: 40, right: 80, bottom: 40, left: 60 },
+      padding: { top: 40, right: 140, bottom: 40, left: 80 },
       maxZoom: 1
     });
   };
@@ -197,8 +234,11 @@ export default function App() {
     graph.stopBatch('layout');
 
     // Auto-fit viewport to show the entire layout centered with generous margins
+    if (containerRef.current) {
+      graph.resize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    }
     graph.zoomToFit({
-      padding: { top: 40, right: 80, bottom: 40, left: 60 },
+      padding: { top: 40, right: 140, bottom: 40, left: 80 },
       maxZoom: 1
     });
   };
@@ -312,7 +352,7 @@ export default function App() {
                 }
               }
             },
-            router: { name: 'manhattan' },
+            router: { name: 'orth' },
             connector: { name: 'rounded' }
           });
         }
@@ -325,6 +365,9 @@ export default function App() {
       new Selection({
         enabled: true,
         rubberband: true,
+        rubberNode: true,
+        rubberEdge: true,
+        strict: true,
         showNodeSelectionBox: true,
         showEdgeSelectionBox: true,
       })
@@ -346,6 +389,44 @@ export default function App() {
         stackSize: 20
       })
     );
+
+    instance.use(
+      new Keyboard({
+        enabled: true,
+      })
+    );
+
+    // Bind arrow keys for fine-tuning position
+    const moveStep = 1; // 1px for fine tuning
+    instance.bindKey(['up', 'down', 'left', 'right'], (e) => {
+      e.preventDefault();
+      const cells = instance.getSelectedCells();
+      if (cells.length > 0) {
+        cells.forEach((cell) => {
+          if (cell.isNode()) {
+            const position = cell.getPosition();
+            switch (e.key) {
+              case 'ArrowUp':
+              case 'Up':
+                cell.setPosition(position.x, position.y - moveStep);
+                break;
+              case 'ArrowDown':
+              case 'Down':
+                cell.setPosition(position.x, position.y + moveStep);
+                break;
+              case 'ArrowLeft':
+              case 'Left':
+                cell.setPosition(position.x - moveStep, position.y);
+                break;
+              case 'ArrowRight':
+              case 'Right':
+                cell.setPosition(position.x + moveStep, position.y);
+                break;
+            }
+          }
+        });
+      }
+    });
 
     const loadMockNodes = () => {
       instance.addNode({
@@ -380,8 +461,28 @@ export default function App() {
     const savedProgress = localStorage.getItem('org-chart-progress');
     if (savedProgress) {
       try {
-        const json = JSON.parse(savedProgress);
-        instance.fromJSON(json);
+        const data = JSON.parse(savedProgress);
+        // Support both old JSON format (array/cells direct) and new format
+        const cells = data.cells || (Array.isArray(data) ? data : data.nodes ? data : []);
+        
+        // Migrate edge routers to orth to keep paths stable
+        if (Array.isArray(cells)) {
+          cells.forEach(cell => {
+            if (cell.shape === 'edge' && (cell.router?.name === 'manhattan' || cell.router?.name === 'orthogonal')) {
+              cell.router = { name: 'orth' };
+            }
+          });
+        }
+        
+        instance.fromJSON({ cells });
+        
+        // Restore saved zoom and translate (pan) viewport position
+        if (data.zoom) {
+          instance.zoom(data.zoom, { absolute: true });
+        }
+        if (data.translate) {
+          instance.translate(data.translate.tx, data.translate.ty);
+        }
       } catch (e) {
         console.error('Failed to load saved progress from localStorage:', e);
         loadMockNodes();
@@ -392,6 +493,17 @@ export default function App() {
 
     setGraph(instance);
 
+    // Set up a ResizeObserver to automatically keep the graph size in sync with the container element
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          instance.resize(width, height);
+        }
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+
     // Event listener for selection change
     const updateSelection = () => {
       const selected = instance.getSelectedCells();
@@ -399,6 +511,7 @@ export default function App() {
       setSelectedCellIds(ids);
       if (selected.length > 0) {
         setSelectedCellId(selected[0].id);
+        setPanelCollapsed(false); // Auto-expand panel when an element is selected
       } else {
         setSelectedCellId(null);
       }
@@ -411,7 +524,13 @@ export default function App() {
       saveTimeout = setTimeout(() => {
         try {
           const json = instance.toJSON();
-          localStorage.setItem('org-chart-progress', JSON.stringify(json));
+          const zoom = instance.zoom();
+          const translate = instance.translate();
+          localStorage.setItem('org-chart-progress', JSON.stringify({
+            cells: json.cells,
+            zoom,
+            translate
+          }));
         } catch (err) {
           console.error('Auto-save to localStorage failed:', err);
         }
@@ -420,6 +539,11 @@ export default function App() {
 
     instance.on('cell:selected', updateSelection);
     instance.on('cell:unselected', updateSelection);
+    instance.on('edge:selected', updateSelection);
+    instance.on('edge:unselected', ({ edge }) => {
+      edge.removeTools();
+      updateSelection();
+    });
 
     // Batch resizing: sync size of all selected nodes when one is resized
     instance.on('node:resizing', ({ node }) => {
@@ -468,6 +592,21 @@ export default function App() {
           }
         }
       });
+    });
+
+    instance.on('edge:click', ({ edge }) => {
+      instance.cleanSelection();
+      instance.select(edge);
+      
+      // Add tools only when explicitly clicked
+      edge.addTools([
+        'vertices',
+        'segments',
+        {
+          name: 'button-remove',
+          args: { distance: -30 }
+        }
+      ]);
     });
     instance.on('cell:added', saveToLocalStorage);
     instance.on('cell:removed', saveToLocalStorage);
@@ -577,6 +716,9 @@ export default function App() {
       if (containerRef.current) {
         containerRef.current.removeEventListener('contextmenu', handleContextMenu);
       }
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       instance.dispose();
     };
   }, []);
@@ -584,7 +726,14 @@ export default function App() {
   const handleExportJSON = () => {
     if (!graph) return;
     const json = graph.toJSON();
-    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    const zoom = graph.zoom();
+    const translate = graph.translate();
+    const exportData = {
+      cells: json.cells,
+      zoom,
+      translate
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -596,8 +745,41 @@ export default function App() {
   const handleImportJSON = (json) => {
     if (!graph) return;
     try {
-      graph.fromJSON(json);
-      localStorage.setItem('org-chart-progress', JSON.stringify(json));
+      const cells = json.cells || (Array.isArray(json) ? json : json.nodes ? json : []);
+      
+      // Migrate edge routers to orth to keep paths stable
+      if (Array.isArray(cells)) {
+        cells.forEach(cell => {
+          if (cell.shape === 'edge' && (cell.router?.name === 'manhattan' || cell.router?.name === 'orthogonal')) {
+            cell.router = { name: 'orth' };
+          }
+        });
+      }
+      
+      graph.fromJSON({ cells });
+      
+      // Auto-restore zoom and translate if they exist, or auto-fit to new imported chart content
+      if (json.zoom) {
+        graph.zoom(json.zoom, { absolute: true });
+      }
+      if (json.translate) {
+        graph.translate(json.translate.tx, json.translate.ty);
+      }
+      if (!json.zoom && !json.translate) {
+        setTimeout(() => {
+          handleZoomToFit();
+        }, 50);
+      }
+
+      // Save to local storage in new format
+      const zoom = graph.zoom();
+      const translate = graph.translate();
+      localStorage.setItem('org-chart-progress', JSON.stringify({
+        cells,
+        zoom,
+        translate
+      }));
+      
       triggerUpdate();
     } catch (err) {
       alert('导入 JSON 格式错误: ' + err.message);
@@ -622,7 +804,34 @@ export default function App() {
   };
 
   const handleExportPDF = () => {
-    window.print();
+    if (!graph) return;
+    try {
+      graph.toPNG((dataUri) => {
+        const img = new Image();
+        img.onload = () => {
+          const width = img.naturalWidth;
+          const height = img.naturalHeight;
+          const PX2MM = 0.2646;
+          const pdfW = width * PX2MM;
+          const pdfH = height * PX2MM;
+          const orientation = pdfW > pdfH ? 'landscape' : 'portrait';
+          const doc = new jsPDF({ orientation, unit: 'mm', format: [pdfW, pdfH] });
+          doc.addImage(dataUri, 'PNG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+          doc.save('org-chart.pdf');
+        };
+        img.onerror = () => {
+          alert('PDF 导出失败，请尝试使用 PNG/SVG 导出代替。');
+        };
+        img.src = dataUri;
+      }, {
+        backgroundColor: '#ffffff',
+        padding: { top: 20, right: 20, bottom: 20, left: 20 },
+        quality: 1,
+      });
+    } catch (err) {
+      console.error(err);
+      alert('生成 PDF 时发生错误：' + err.message);
+    }
   };
 
   const handleClearCanvas = () => {
@@ -638,7 +847,10 @@ export default function App() {
     <div className="app-container">
       <header className="header-bar">
         <div className="logo-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', borderRadius: '4px', objectFit: 'contain' }} />
+          <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="点击更换 Logo (图片将保存在本地浏览器)">
+            <img src={logoUrl} alt="Logo" style={{ height: '30px', width: '30px', borderRadius: '4px', objectFit: 'contain' }} />
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
+          </label>
           <span>组织结构图编辑器 (Org Chart Editor)</span>
         </div>
         <Toolbar
@@ -655,7 +867,24 @@ export default function App() {
         />
       </header>
       <div className="main-content">
-        <aside className="sidebar-left">
+        <aside className={`sidebar-left ${leftPanelCollapsed ? 'sidebar-left--collapsed' : ''}`}>
+          <button
+            className="panel-toggle-btn panel-toggle-btn--left"
+            onClick={() => {
+              setLeftPanelCollapsed(c => {
+                if (graph) {
+                  const { tx, ty } = graph.translate();
+                  // When collapsing, canvas expands left by 240px. Center moves left by 120px.
+                  // Shifting graph right by 120px keeps it centered relative to the new canvas size.
+                  graph.translate(tx + (!c ? 120 : -120), ty);
+                }
+                return !c;
+              });
+            }}
+            title={leftPanelCollapsed ? '展开左侧边栏' : '收起左侧边栏'}
+          >
+            {leftPanelCollapsed ? '▶' : '◀'}
+          </button>
           <Sidebar
             versions={versions}
             onLoadVersion={handleLoadVersion}
@@ -672,7 +901,24 @@ export default function App() {
         >
           {/* AntV X6 Canvas container */}
         </main>
-        <aside className="properties-panel">
+        <aside className={`properties-panel ${panelCollapsed ? 'properties-panel--collapsed' : ''}`}>
+          <button
+            className="panel-toggle-btn"
+            onClick={() => {
+              setPanelCollapsed(c => {
+                if (graph) {
+                  const { tx, ty } = graph.translate();
+                  // Right panel is 280px. When it collapses, the canvas center moves right by 140px.
+                  // Shifting graph right by 140px keeps it centered relative to the new canvas size.
+                  graph.translate(tx + (!c ? 140 : -140), ty);
+                }
+                return !c;
+              });
+            }}
+            title={panelCollapsed ? '展开属性栏' : '收起属性栏'}
+          >
+            {panelCollapsed ? '◀' : '▶'}
+          </button>
           <PropertiesPanel
             selectedCellId={selectedCellId}
             selectedCellIds={selectedCellIds}

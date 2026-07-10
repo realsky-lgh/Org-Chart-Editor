@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], graph, onUpdate }) {
   const [localData, setLocalData] = useState({});
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberLevel, setNewMemberLevel] = useState('');
 
   const cell = graph ? graph.getCellById(selectedCellId) : null;
   const isMultiple = selectedCellIds.length > 1;
@@ -360,6 +362,122 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     />
                   </div>
                 </div>
+
+                {/* ── Members Management ── */}
+                {(() => {
+                  const cellData = cell.getData() || {};
+                  const members = cellData.members || [];
+                  const atCap = members.length >= 30;
+
+                  const handleAddMember = () => {
+                    const name = newMemberName.trim();
+                    const level = newMemberLevel.trim();
+                    if (!name) return;
+                    if (atCap) { alert('该部门人员已达上限 30 人'); return; }
+                    const updated = [...members, { name, level: level || '未设职级' }];
+                    cell.setData({ ...cellData, members: updated }, { overwrite: true });
+                    setNewMemberName('');
+                    setNewMemberLevel('');
+                    if (onUpdate) onUpdate();
+                  };
+
+                  const handleRemoveMember = (idx) => {
+                    const freshData = cell.getData() || {};
+                    const freshMembers = freshData.members || [];
+                    const memberName = freshMembers[idx]?.name || '该成员';
+                    
+                    if (!window.confirm(`确定要从部门中移除「${memberName}」吗？`)) return;
+
+                    const updated = freshMembers.filter((_, i) => i !== idx);
+                    const nextData = { ...freshData, members: updated };
+                    if (updated.length === 0) nextData.isExpanded = false;
+                    cell.setData(nextData, { overwrite: true });
+                    if (updated.length === 0) cell.setSize(cell.getSize().width, 90);
+                    if (onUpdate) onUpdate();
+                  };
+
+                  return (
+                    <div className="properties-field">
+                      <label className="properties-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>部门人员</span>
+                        <span style={{
+                          fontSize: '10px', fontWeight: '500',
+                          color: atCap ? '#ef4444' : 'var(--text-muted)',
+                          background: atCap ? '#fef2f2' : '#f1f5f9',
+                          padding: '1px 6px', borderRadius: '10px'
+                        }}>{members.length}/30人</span>
+                      </label>
+
+                      {members.length > 0 && (
+                        <div style={{
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          marginBottom: '8px'
+                        }}>
+                          {members.map((m, idx) => (
+                            <div key={idx} style={{
+                              display: 'flex', alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '5px 8px',
+                              borderBottom: idx < members.length - 1 ? '1px solid var(--border-color)' : 'none',
+                              background: idx % 2 === 0 ? 'var(--bg-main)' : 'var(--bg-panel)'
+                            }}>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <span style={{ fontWeight: '500', fontSize: '12px' }}>{m.name}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '5px' }}>{m.level}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleRemoveMember(idx); }}
+                                title="移除"
+                                style={{
+                                  border: 'none', background: 'none',
+                                  cursor: 'pointer', color: '#cbd5e1',
+                                  fontSize: '16px', lineHeight: '1',
+                                  padding: '0 2px', flexShrink: 0,
+                                  transition: 'color 0.15s'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                onMouseLeave={e => e.currentTarget.style.color = '#cbd5e1'}
+                              >×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {!atCap ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <input
+                            className="properties-input"
+                            placeholder="姓名（必填）"
+                            value={newMemberName}
+                            onChange={e => setNewMemberName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleAddMember()}
+                          />
+                          <input
+                            className="properties-input"
+                            placeholder="职级/职务，如：高级工程师"
+                            value={newMemberLevel}
+                            onChange={e => setNewMemberLevel(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleAddMember()}
+                          />
+                          <button
+                            className="btn-action"
+                            onClick={handleAddMember}
+                            style={{ justifyContent: 'center', fontSize: '11px', padding: '5px 0', fontWeight: '600' }}
+                          >+ 添加人员</button>
+                        </div>
+                      ) : (
+                        <div style={{
+                          textAlign: 'center', fontSize: '11px',
+                          color: '#ef4444', padding: '6px',
+                          background: '#fef2f2', borderRadius: '6px'
+                        }}>已达上限 30 人，请先移除成员</div>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
 
@@ -376,17 +494,7 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     placeholder="输入岗位名称"
                   />
                 </div>
-                <div className="properties-field">
-                  <label className="properties-label">职级</label>
-                  <input
-                    type="text"
-                    className="properties-input"
-                    value={localData.level || ''}
-                    onChange={(e) => handleLocalChange('level', e.target.value)}
-                    onBlur={() => handleCommitNodeField('level')}
-                    placeholder="例如: P6, P7"
-                  />
-                </div>
+
                 <div className="properties-field">
                   <label className="properties-label">成员列表 (逗号分隔)</label>
                   <input
@@ -431,6 +539,28 @@ export default function PropertiesPanel({ selectedCellId, selectedCellIds = [], 
                     onChange={(e) => handleLocalChange('name', e.target.value)}
                     onBlur={() => handleCommitNodeField('name')}
                     placeholder="输入员工姓名"
+                  />
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">职级</label>
+                  <input
+                    type="text"
+                    className="properties-input"
+                    value={localData.rank || ''}
+                    onChange={(e) => handleLocalChange('rank', e.target.value)}
+                    onBlur={() => handleCommitNodeField('rank')}
+                    placeholder="例如: 高级开发工程师"
+                  />
+                </div>
+                <div className="properties-field">
+                  <label className="properties-label">等级</label>
+                  <input
+                    type="text"
+                    className="properties-input"
+                    value={localData.level || ''}
+                    onChange={(e) => handleLocalChange('level', e.target.value)}
+                    onBlur={() => handleCommitNodeField('level')}
+                    placeholder="例如: P6, P7"
                   />
                 </div>
                 <div className="properties-field">

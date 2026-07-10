@@ -92,31 +92,10 @@ export default function Toolbar({
         <button
           className="btn-action"
           onClick={onExportPDF}
-          title="导出 PDF / 打印"
+          title="导出 PDF"
         >
           <Printer size={16} />
-          <span>PDF / 打印</span>
-        </button>
-      </div>
-
-      <div className="toolbar-divider" />
-
-      <div className="toolbar-group">
-        <button
-          className="btn-action"
-          onClick={() => onAutoLayout?.('TB')}
-          title="整理 (垂直)"
-        >
-          <RefreshCw size={16} />
-          <span>整理 (垂直)</span>
-        </button>
-        <button
-          className="btn-action"
-          onClick={() => onAutoLayout?.('LR')}
-          title="整理 (横向)"
-        >
-          <RefreshCw size={16} />
-          <span>整理 (横向)</span>
+          <span>导出 PDF</span>
         </button>
       </div>
 

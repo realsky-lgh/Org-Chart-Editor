@@ -64,7 +64,7 @@ body {
 .main-content {
   grid-row: 2;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   height: calc(100vh - 56px);
 }
 .sidebar-left {
@@ -74,6 +74,23 @@ body {
   overflow-y: auto;
   position: relative;
   z-index: 10;
+  width: 240px;
+  transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.sidebar-left--collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border-right: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.sidebar-left--collapsed > *:not(.panel-toggle-btn) {
+  display: none !important;
+  opacity: 0;
+  visibility: hidden;
 }
 .canvas-container {
   background: var(--bg-main);
@@ -91,6 +108,69 @@ body {
   overflow-y: auto;
   position: relative;
   z-index: 10;
+  width: 280px;
+  transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.properties-panel--collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border-left: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.properties-panel--collapsed > .properties-empty,
+.properties-panel--collapsed > .properties-panel-container {
+  display: none !important;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.panel-toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12;
+  transition: color 0.15s, border-color 0.15s;
+  padding: 0;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.properties-panel--collapsed .panel-toggle-btn {
+  right: auto;
+  left: -30px;
+  top: 8px;
+}
+
+.panel-toggle-btn--left {
+  right: 8px;
+  left: auto;
+  top: 12px;
+}
+
+.sidebar-left--collapsed .panel-toggle-btn--left {
+  right: -30px;
+  left: auto;
+  top: 8px;
+}
+
+.panel-toggle-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
 
 /* Stencil Sidebar Styles */
