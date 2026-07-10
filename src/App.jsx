@@ -61,6 +61,17 @@ const nodePorts = {
 };
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // If no password is set, default to 123456
+    const saved = localStorage.getItem('app-password');
+    if (!saved) {
+      localStorage.setItem('app-password', '123456');
+    }
+    return false;
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const containerRef = useRef(null);
   const [graph, setGraph] = useState(null);
   const [selectedCellId, setSelectedCellId] = useState(null);
@@ -723,7 +734,7 @@ export default function App() {
       }
       instance.dispose();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleExportJSON = () => {
     if (!graph) return;
@@ -845,6 +856,61 @@ export default function App() {
     }
   };
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const saved = localStorage.getItem('app-password') || '123456';
+    if (passwordInput === saved) {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('密码错误');
+    }
+  };
+
+  const handleChangePassword = () => {
+    const oldPass = window.prompt('请输入旧密码:');
+    if (oldPass === null) return;
+    const saved = localStorage.getItem('app-password') || '123456';
+    if (oldPass !== saved) {
+      alert('旧密码错误！');
+      return;
+    }
+    const newPass = window.prompt('请输入新密码:');
+    if (!newPass) return;
+    const confirmPass = window.prompt('请再次输入新密码:');
+    if (newPass !== confirmPass) {
+      alert('两次输入的新密码不一致！');
+      return;
+    }
+    localStorage.setItem('app-password', newPass);
+    alert('密码修改成功！');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main)' }}>
+        <div style={{ background: 'var(--bg-panel)', padding: '40px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', textAlign: 'center', width: '320px' }}>
+          <img src={logoUrl} alt="Logo" style={{ width: '64px', height: '64px', objectFit: 'contain', marginBottom: '20px' }} />
+          <h2 style={{ margin: '0 0 24px 0', color: 'var(--text-primary)', fontSize: '18px' }}>组织结构图编辑器</h2>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <input
+              type="password"
+              placeholder="请输入访问密码 (默认: 123456)"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              style={{ padding: '10px', borderRadius: '4px', border: '1px solid var(--border-color)', outline: 'none' }}
+              autoFocus
+            />
+            {loginError && <div style={{ color: 'red', fontSize: '12px', textAlign: 'left' }}>{loginError}</div>}
+            <button type="submit" style={{ padding: '10px', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              登录系统
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <header className="header-bar">
@@ -866,6 +932,7 @@ export default function App() {
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onZoomToFit={handleZoomToFit}
+          onChangePassword={handleChangePassword}
         />
       </header>
       <div className="main-content">
