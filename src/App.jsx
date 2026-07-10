@@ -84,13 +84,15 @@ export default function App() {
   };
 
   useEffect(() => {
-    let link = document.querySelector("link[rel~='icon']");
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
+    // Force browser to update favicon by creating a new link element
+    const oldLink = document.querySelector("link[rel~='icon']");
+    if (oldLink) {
+      oldLink.parentNode.removeChild(oldLink);
     }
-    link.href = logoUrl;
+    const newLink = document.createElement('link');
+    newLink.rel = 'icon';
+    newLink.href = logoUrl;
+    document.head.appendChild(newLink);
   }, [logoUrl]);
 
   const [tick, setTick] = useState(0);
