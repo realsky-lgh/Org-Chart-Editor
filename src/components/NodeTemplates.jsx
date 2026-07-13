@@ -163,10 +163,11 @@ export function DeptNode({ node }) {
         <div style={{
           position: 'absolute',
           top: '100%',
-          left: '0',
-          width: '100%',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(4px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '320px',
+          background: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(8px)',
           border: `1px solid ${accent}`,
           borderRadius: '8px',
           padding: '12px',
@@ -202,8 +203,8 @@ export function DeptNode({ node }) {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0, flex: 1 }}>
                     <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: accent, flexShrink: 0, marginTop: '8px' }} />
-                    <span style={{ fontWeight: '500', wordBreak: 'break-word' }}>{m.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)', wordBreak: 'break-word', marginTop: '3px' }}>({m.level || '未设'})</span>
+                    <span style={{ fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1 }}>{m.name}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)', whiteSpace: 'nowrap', flexShrink: 0, marginTop: '3px' }}>({m.level || '未设'})</span>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleRemoveMember(idx, e); }}
